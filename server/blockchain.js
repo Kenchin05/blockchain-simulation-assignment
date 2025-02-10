@@ -1,86 +1,74 @@
-const { timeStamp } = require('console');
 const { createHash } = require('crypto');
 
-
-class Blockchain{
-    constructor(){
-        this.chain=new Array();
-        var date =new Date();
-        date = date.toString();
-        var genesisBlock = {
-            index : 1,
-            timestamp:date,
-            nonce:0,
-            previous_hash:'0',
-            data:"Genesis Block ",
-
-        }
-        this.block_difficulty =5;
-        genesisBlock.nonce = this.proof_of_work(genesisBlock)
-        this.create_block("0" , genesisBlock.nonce, 1 ,  "Genesis Block", date);
+class Blockchain {
+    constructor() {
+        // Initialize blockchain with empty chain array and default difficulty
+        this.chain = [];
+        this.block_difficulty = 5;  // Number of leading zeros required in hash
         
+        // Create genesis block (first block in the chain)
+        this.create_block("0", 1, 1, "Genesis Block", new Date().toString());
     }
 
-    create_block(previous_hash  , nonce , block_index  , data ,timestamp ){
-        var block = {
-            index : block_index,
-            timestamp : timestamp,
-            nonce : nonce,
-            previous_hash : previous_hash,
-            data : data
-        }
+    // Creates a new block and adds it to the chain
+    create_block(previous_hash, nonce, index, data, timeStamp) {
+        // Block structure definition
+        const block = {
+            index: index,                // Position in the chain
+            timeStamp: timeStamp,        // Time of block creation
+            data: data,                  // Block's payload/data
+            previous_hash: previous_hash, // Hash of previous block
+            nonce: nonce                 // Number used for proof of work
+        };
+        
         this.chain.push(block);
-
         return block;
-
     }
 
-    get_previous_block(){
-        return this.chain.slice(-1);
-    }
-
-    hash(block){
-        var blockstr =""+ block.index + block.previous_hash +  block.data +block.timeStamp+ ""+block.nonce;
+    // Calculates SHA-256 hash of a block
+    hash(block) {
+        // Concatenate block properties for hashing
+        var blockstr = "" + block.index + block.previous_hash + block.data + block.timeStamp + "" + block.nonce;
+        // Create and return SHA-256 hash
         var hash_operation = createHash('sha256').update(blockstr).digest('hex');
         return hash_operation;
     }
 
-    proof_of_work(block){
-        var nonce = 1
-        var check_proof = false
+    // Implements Proof of Work mechanism
+    proof_of_work(block) {
+        var nonce = 1;
+        var check_proof = false;
 
-        while(check_proof == false){
-            block.nonce= nonce;
+        // Keep trying different nonces until we find one that gives required number of leading zeros
+        while (check_proof == false) {
+            block.nonce = nonce;
             var hash_operation = this.hash(block);
 
-            if(hash_operation.slice(0,this.block_difficulty) == '0'.repeat(this.block_difficulty)){
+            // Check if hash has required number of leading zeros
+            if (hash_operation.slice(0, this.block_difficulty) == '0'.repeat(this.block_difficulty)) {
                 check_proof = true;
-            }else{
-                nonce+=1;
+            } else {
+                nonce += 1;
             }
-
         }
 
         return nonce;
-
     }
 
-    is_valid_chain(){
+    // Validates the entire blockchain
+    is_valid_chain() {
         var index = 1;
 
-        while(index< this.chain.length){
-
-            if(this.hash(this.chain[index-1]) != this.chain[index].previous_hash){
+        // Check each block's link to previous block
+        while (index < this.chain.length) {
+            // Verify that current block's previous_hash matches actual hash of previous block
+            if (this.hash(this.chain[index - 1]) != this.chain[index].previous_hash) {
                 return false;
             }
-
-            index+=1;
-
+            index += 1;
         }
         return true;
     }
-
-    
-
 }
-module.exports.Blockchain = Blockchain ;
+
+module.exports = Blockchain;
