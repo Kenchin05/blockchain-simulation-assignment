@@ -54,6 +54,12 @@ npm install
 
 2. Start the application
 ```bash
+for frontend:
+cd client
+npm start
+
+for backend:
+cd server
 npm start
 ```
 
